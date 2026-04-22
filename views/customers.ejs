@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - Smart Billing</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons (Phosphor Icons for a clean look) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .customers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 1rem;
+        }
+        .customers-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+        .customers-grid::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        .customer-card {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: var(--transition);
+        }
+        .customer-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+        }
+        .customer-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        .customer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .customer-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .customer-stats {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .customer-history {
+            margin-top: 0.5rem;
+        }
+        .customer-history h4 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+        .history-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 0.9rem;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .all-content-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 90px);
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="app-layout">
+        
+        <!-- Left Sidebar: App branding & Receipts -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <i class="ph-fill ph-receipt highlight-icon"></i>
+                <h1>Smart<span class="highlight">Bill</span></h1>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title">Navigation</h3>
+                <nav class="nav-menu">
+                    <a href="/" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                    <a href="/customers" class="nav-item active"><i class="ph ph-users"></i> Customers</a>
+                    <a href="/reports" class="nav-item"><i class="ph ph-chart-bar"></i> Reports</a>
+                </nav>
+            </div>
+
+            <div class="sidebar-section receipts-section">
+                <h3 class="section-title">Recent Receipts <span class="badge"><%= receipts.length %></span></h3>
+                <div class="receipt-list-container">
+                    <% if (receipts.length > 0) { %>
+                        <ul class="receipt-list">
+                            <% receipts.slice().reverse().forEach(receipt => { %>
+                                <li>
+                                    <a href="/receipt/<%= receipt.id %>" class="receipt-card">
+                                        <div class="receipt-icon"><i class="ph ph-file-text"></i></div>
+                                        <div class="receipt-info">
+                                            <span class="receipt-id"><%= receipt.customerName %></span>
+                                            <span class="receipt-date"><%= receipt.date.split(',')[0] %></span>
+                                        </div>
+                                        <span class="receipt-total">₹<%= receipt.total %></span>
+                                    </a>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <div class="empty-receipts">
+                            <i class="ph ph-files"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <header class="topbar">
+                <div class="search-bar">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Search customers...">
+                </div>
+                <div class="user-profile">
+                    <div class="notification-bell">
+                        <i class="ph ph-bell"></i>
+                        <span class="indicator"></span>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Admin" alt="User Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="all-content-container">
+                <div class="page-header">
+                    <h2>Customer Directory</h2>
+                    <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;"><%= customers.length %> Total Customers</span>
+                </div>
+
+                <% if (customers.length > 0) { %>
+                    <div class="customers-grid">
+                        <% customers.forEach(customer => { %>
+                            <div class="customer-card glass-panel">
+                                <div class="customer-header">
+                                    <div class="customer-avatar">
+                                        <i class="ph ph-user"></i>
+                                    </div>
+                                    <div class="customer-name"><%= customer.name %></div>
+                                </div>
+                                
+                                <div class="customer-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Total Spent</span>
+                                        <span class="stat-value highlight">₹<%= customer.totalSpent.toFixed(2) %></span>
+                                    </div>
+                                    <div class="stat-item" style="text-align: right;">
+                                        <span class="stat-label">Orders</span>
+                                        <span class="stat-value"><%= customer.orderCount %></span>
+                                    </div>
+                                </div>
+
+                                <div class="customer-history">
+                                    <h4>Order History</h4>
+                                    <ul class="history-list">
+                                        <% customer.receipts.slice().reverse().slice(0, 3).forEach(r => { %>
+                                            <li class="history-item">
+                                                <span><a href="/receipt/<%= r.id %>" style="text-decoration: underline;">Receipt</a> - <%= r.date.split(',')[0] %></span>
+                                                <span style="font-weight: 500;">₹<%= r.total %></span>
+                                            </li>
+                                        <% }) %>
+                                    </ul>
+                                    <% if(customer.receipts.length > 3) { %>
+                                        <div style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                                            + <%= customer.receipts.length - 3 %> more orders
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <div class="empty-state glass-panel" style="flex: 1;">
+                        <div class="empty-icon-wrapper">
+                            <i class="ph ph-users"></i>
+                        </div>
+                        <h3>No Customers Yet</h3>
+                        <p>Complete a checkout to see customers appear here.</p>
+                    </div>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

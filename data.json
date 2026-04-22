@@ -1,0 +1,58 @@
+{
+  "receipts": [
+    {
+      "id": 1,
+      "date": "4/7/2026, 10:53:28 PM",
+      "customerName": "Sumit ",
+      "items": [
+        {
+          "id": "1775582595150",
+          "name": "Lenovo LOQ ",
+          "price": 109000,
+          "quantity": 1
+        }
+      ],
+      "subtotal": "109000.00",
+      "tax": "10900.00",
+      "total": "119900.00"
+    },
+    {
+      "id": 2,
+      "date": "4/7/2026, 11:02:28 PM",
+      "customerName": "Vaibhav",
+      "items": [
+        {
+          "id": "1775583125306",
+          "name": "Mouse ",
+          "price": 100,
+          "quantity": 1
+        },
+        {
+          "id": "1775583138068",
+          "name": "Keyboard ",
+          "price": 499,
+          "quantity": 1
+        }
+      ],
+      "subtotal": "599.00",
+      "tax": "59.90",
+      "total": "658.90"
+    },
+    {
+      "id": 3,
+      "date": "10/4/2026, 1:24:15 pm",
+      "customerName": "Kunal",
+      "items": [
+        {
+          "id": "1776832078846",
+          "name": "Mouse",
+          "price": 500,
+          "quantity": 12
+        }
+      ],
+      "subtotal": "6000.00",
+      "tax": "600.00",
+      "total": "6600.00"
+    }
+  ]
+}

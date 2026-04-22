@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Receipt - Smart Billing</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .edit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-right: 1.5rem;
+        }
+        .edit-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .edit-badge {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .all-content-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 90px);
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="app-layout">
+        
+        <!-- Left Sidebar: App branding & Receipts -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <i class="ph-fill ph-receipt highlight-icon"></i>
+                <h1>Smart<span class="highlight">Bill</span></h1>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title">Navigation</h3>
+                <nav class="nav-menu">
+                    <a href="/" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                    <a href="/customers" class="nav-item"><i class="ph ph-users"></i> Customers</a>
+                    <a href="/reports" class="nav-item"><i class="ph ph-chart-bar"></i> Reports</a>
+                </nav>
+            </div>
+
+            <div class="sidebar-section receipts-section">
+                <h3 class="section-title">Recent Receipts <span class="badge"><%= receipts.length %></span></h3>
+                <div class="receipt-list-container">
+                    <% if (receipts.length > 0) { %>
+                        <ul class="receipt-list">
+                            <% receipts.slice().reverse().forEach(r => { %>
+                                <li>
+                                    <a href="/receipt/<%= r.id %>" class="receipt-card <%= r.id === receipt.id ? 'active' : '' %>">
+                                        <div class="receipt-icon"><i class="ph ph-file-text"></i></div>
+                                        <div class="receipt-info">
+                                            <span class="receipt-id"><%= r.customerName %></span>
+                                            <span class="receipt-date"><%= r.date.split(',')[0] %></span>
+                                        </div>
+                                        <span class="receipt-total">₹<%= r.total %></span>
+                                    </a>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <header class="topbar">
+                <div class="search-bar">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="user-profile">
+                    <div class="notification-bell">
+                        <i class="ph ph-bell"></i>
+                        <span class="indicator"></span>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Admin" alt="User Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="all-content-container">
+                <div class="edit-header">
+                    <h2>
+                        <i class="ph ph-pencil-simple text-warning" style="color: var(--primary);"></i> 
+                        Editing Receipt #<%= receipt.id %>
+                        <span class="edit-badge">Edit Mode</span>
+                    </h2>
+                    <a href="/receipt/<%= receipt.id %>" class="btn glass-panel text-muted" style="background: rgba(255,255,255,0.05); color: white;">
+                        Cancel
+                    </a>
+                </div>
+
+                <div class="dashboard-grid" style="flex: 1;">
+                    <!-- Left Column: Add Item Form -->
+                    <div class="content-left">
+                        <section class="add-section glass-panel">
+                            <div class="section-header">
+                                <h2>Add Item to Bill</h2>
+                            </div>
+                            <form id="addItemForm" class="add-form">
+                                <div class="form-group">
+                                    <label for="itemName">Item Name</label>
+                                    <div class="input-with-icon">
+                                        <i class="ph ph-package"></i>
+                                        <input type="text" id="itemName" required placeholder="e.g. Wireless Keyboard" autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="price">Price (₹)</label>
+                                        <div class="input-with-icon">
+                                            <i class="ph ph-currency-inr"></i>
+                                            <input type="number" id="price" step="0.01" min="0" required placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="quantity">Quantity</label>
+                                        <div class="input-with-icon">
+                                            <i class="ph ph-hash"></i>
+                                            <input type="number" id="quantity" min="1" value="1" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-glow">
+                                    <span>Add to Bill</span>
+                                    <i class="ph ph-plus-circle"></i>
+                                </button>
+                            </form>
+                        </section>
+                    </div>
+
+                    <!-- Right Column: Current Items & Save -->
+                    <div class="content-right">
+                        <section class="billing-section glass-panel">
+                            <div class="section-header">
+                                <h2>Modified Order</h2>
+                            </div>
+
+                            <div class="bill-items-container">
+                                <ul id="billList" class="current-bill-list">
+                                    <!-- Items injected here by JS -->
+                                </ul>
+                            </div>
+
+                            <div class="checkout-footer">
+                                <div class="summary-details">
+                                    <div class="summary-line">
+                                        <span>Subtotal</span>
+                                        <span id="subtotalLabel">₹0.00</span>
+                                    </div>
+                                    <div class="summary-line text-muted">
+                                        <span>Tax (10%)</span>
+                                        <span id="taxLabel">₹0.00</span>
+                                    </div>
+                                    <div class="divider"></div>
+                                    <div class="summary-line total-line">
+                                        <span>Total</span>
+                                        <span id="totalLabel" class="total-amount highlight" style="color: var(--primary);">₹0.00</span>
+                                    </div>
+                                </div>
+                                
+                                <form id="saveChangesForm">
+                                    <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                                        <label for="customerName">Customer Name</label>
+                                        <div class="input-with-icon">
+                                            <i class="ph ph-user"></i>
+                                            <input type="text" id="customerName" required value="<%= receipt.customerName %>">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-checkout">
+                                        <i class="ph ph-floppy-disk"></i> Save Modifications
+                                    </button>
+                                </form>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Client-side Logic for Editing -->
+    <script id="receipt-data" type="application/json">
+        <%- JSON.stringify(receipt.items) %>
+    </script>
+    <script>
+        // Load initial state from server-side template
+        let items = JSON.parse(document.getElementById('receipt-data').textContent);
+
+        const addItemForm = document.getElementById('addItemForm');
+        const saveChangesForm = document.getElementById('saveChangesForm');
+        const billList = document.getElementById('billList');
+        
+        function updateUI() {
+            billList.innerHTML = '';
+            
+            if (items.length === 0) {
+                billList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon-wrapper" style="color: var(--primary); background: rgba(99, 102, 241, 0.1);">
+                            <i class="ph ph-shopping-cart"></i>
+                        </div>
+                        <h3>Order is empty</h3>
+                        <p>Add items to save changes.</p>
+                    </div>
+                `;
+            } else {
+                items.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'bill-item';
+                    
+                    const itemDetails = document.createElement('div');
+                    itemDetails.className = 'item-details';
+                    itemDetails.innerHTML = `<div class="item-name">${item.name}</div><div class="item-meta">₹${parseFloat(item.price).toFixed(2)} x ${item.quantity}</div>`;
+                    
+                    const itemTotal = document.createElement('div');
+                    itemTotal.className = 'item-total';
+                    itemTotal.innerText = '₹' + (item.price * item.quantity).toFixed(2);
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'btn-remove';
+                    removeBtn.title = 'Remove Item';
+                    removeBtn.innerHTML = '<i class="ph ph-trash"></i>';
+                    removeBtn.onclick = (e) => {
+                        e.preventDefault();
+                        items.splice(index, 1);
+                        updateUI();
+                    };
+                    
+                    li.appendChild(itemDetails);
+                    li.appendChild(itemTotal);
+                    li.appendChild(removeBtn);
+                    
+                    billList.appendChild(li);
+                });
+            }
+
+            // Calculate totals
+            const subtotal = items.reduce((acc, item) => acc + (parseFloat(item.price) * parseInt(item.quantity, 10)), 0);
+            const tax = subtotal * 0.10;
+            const total = subtotal + tax;
+
+            document.getElementById('subtotalLabel').innerText = '₹' + subtotal.toFixed(2);
+            document.getElementById('taxLabel').innerText = '₹' + tax.toFixed(2);
+            document.getElementById('totalLabel').innerText = '₹' + total.toFixed(2);
+            
+            const btn = saveChangesForm.querySelector('button');
+            btn.disabled = items.length === 0;
+            if (items.length === 0) {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            } else {
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            }
+        }
+
+        // Initialize UI with pre-loaded items
+        updateUI();
+
+        addItemForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('itemName').value;
+            const price = parseFloat(document.getElementById('price').value);
+            const quantity = parseInt(document.getElementById('quantity').value, 10);
+            
+            items.push({
+                id: Date.now().toString(),
+                name,
+                price,
+                quantity
+            });
+            
+            addItemForm.reset();
+            document.getElementById('quantity').value = 1;
+            updateUI();
+        });
+
+        saveChangesForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const customerName = document.getElementById('customerName').value;
+            
+            try {
+                const response = await fetch(window.location.pathname, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customerName, items })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    alert('Error saving receipt: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error while saving modifications.');
+            }
+        });
+    </script>
+</body>
+</html>

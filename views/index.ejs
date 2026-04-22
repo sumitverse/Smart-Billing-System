@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Billing System</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons (Phosphor Icons for a clean look) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-layout">
+        
+        <!-- Left Sidebar: App branding & Receipts -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <i class="ph-fill ph-receipt highlight-icon"></i>
+                <h1>Smart<span class="highlight">Bill</span></h1>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title">Navigation</h3>
+                <nav class="nav-menu">
+                    <a href="/" class="nav-item active"><i class="ph ph-squares-four"></i> Dashboard</a>
+                    <a href="/customers" class="nav-item"><i class="ph ph-users"></i> Customers</a>
+                    <a href="/reports" class="nav-item"><i class="ph ph-chart-bar"></i> Reports</a>
+                </nav>
+            </div>
+
+            <div class="sidebar-section receipts-section">
+                <h3 class="section-title">Recent Receipts <span class="badge"><%= receipts.length %></span></h3>
+                <div class="receipt-list-container">
+                    <% if (receipts.length > 0) { %>
+                        <ul class="receipt-list">
+                            <% receipts.slice().reverse().forEach(receipt => { %>
+                                <li>
+                                    <a href="/receipt/<%= receipt.id %>" class="receipt-card">
+                                        <div class="receipt-icon"><i class="ph ph-file-text"></i></div>
+                                        <div class="receipt-info">
+                                            <span class="receipt-id"><%= receipt.customerName %></span>
+                                            <span class="receipt-date"><%= receipt.date.split(',')[0] %></span>
+                                        </div>
+                                        <span class="receipt-total">₹<%= receipt.total %></span>
+                                    </a>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <div class="empty-receipts">
+                            <i class="ph ph-files"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <header class="topbar">
+                <div class="search-bar">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Search items, receipts or customers...">
+                </div>
+                <div class="user-profile">
+                    <div class="notification-bell">
+                        <i class="ph ph-bell"></i>
+                        <span class="indicator"></span>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Admin" alt="User Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                
+                <!-- Left Column: Add Item & Quick Stats -->
+                <div class="content-left">
+                    <section class="add-section glass-panel">
+                        <div class="section-header">
+                            <h2>Add New Item</h2>
+                            <button class="btn-icon"><i class="ph ph-barcode"></i> Scan</button>
+                        </div>
+                        <form action="/add-item" method="POST" class="add-form">
+                            <div class="form-group">
+                                <label for="itemName">Item Name</label>
+                                <div class="input-with-icon">
+                                    <i class="ph ph-package"></i>
+                                    <input type="text" id="itemName" name="itemName" required placeholder="e.g. Wireless Keyboard" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="price">Price (₹)</label>
+                                    <div class="input-with-icon">
+                                        <i class="ph ph-currency-inr"></i>
+                                        <input type="number" id="price" name="price" step="0.01" min="0" required placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="quantity">Quantity</label>
+                                    <div class="input-with-icon">
+                                        <i class="ph ph-hash"></i>
+                                        <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-glow">
+                                <span>Add to Bill</span>
+                                <i class="ph ph-plus-circle"></i>
+                            </button>
+                        </form>
+                    </section>
+                </div>
+
+                <!-- Right Column: Current Bill List & Checkout -->
+                <div class="content-right">
+                    <section class="billing-section glass-panel">
+                        <div class="section-header">
+                            <h2>Current Order</h2>
+                        </div>
+
+                        <div class="bill-items-container">
+                            <% if (items.length > 0) { %>
+                                <ul class="current-bill-list">
+                                    <% items.forEach(item => { %>
+                                        <li class="bill-item">
+                                            <div class="item-details">
+                                                <div class="item-name"><%= item.name %></div>
+                                                <div class="item-meta">₹<%= item.price.toFixed(2) %> x <%= item.quantity %></div>
+                                            </div>
+                                            <div class="item-total">₹<%= (item.price * item.quantity).toFixed(2) %></div>
+                                            <form action="/remove-item/<%= item.id %>" method="POST" class="remove-form">
+                                                <button type="submit" class="btn-remove" title="Remove Item">
+                                                    <i class="ph ph-trash"></i>
+                                                </button>
+                                            </form>
+                                        </li>
+                                    <% }) %>
+                                </ul>
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <div class="empty-icon-wrapper">
+                                        <i class="ph ph-shopping-cart"></i>
+                                    </div>
+                                    <h3>Order is empty</h3>
+                                    <p>Start adding items to build the customer's bill.</p>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <div class="checkout-footer">
+                            <div class="summary-details">
+                                <div class="summary-line">
+                                    <span>Subtotal</span>
+                                    <span>₹<%= subtotal || '0.00' %></span>
+                                </div>
+                                <div class="summary-line text-muted">
+                                    <span>Tax (10%)</span>
+                                    <span>₹<%= tax || '0.00' %></span>
+                                </div>
+                                <div class="divider"></div>
+                                <div class="summary-line total-line">
+                                    <span>Total</span>
+                                    <span class="total-amount highlight">₹<%= total || '0.00' %></span>
+                                </div>
+                            </div>
+                            
+                            <form action="/checkout" method="POST">
+                                <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                                    <label for="customerName">Customer Name</label>
+                                    <div class="input-with-icon">
+                                        <i class="ph ph-user"></i>
+                                        <input type="text" id="customerName" name="customerName" required placeholder="Name" autocomplete="off" <%= items.length === 0 ? 'disabled' : '' %>>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-checkout" <%= items.length === 0 ? 'disabled' : '' %>>
+                                    <i class="ph ph-check-circle"></i> Complete Checkout
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+</body>
+</html>

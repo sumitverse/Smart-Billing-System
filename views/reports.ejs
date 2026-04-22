@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Smart Billing</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .report-card {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+        .report-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+        }
+        .report-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .report-header i {
+            font-size: 1.5rem;
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        .report-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .all-content-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 90px);
+            padding-right: 1rem;
+            overflow-y: auto;
+        }
+        .all-content-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .all-content-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="app-layout">
+        
+        <!-- Left Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <i class="ph-fill ph-receipt highlight-icon"></i>
+                <h1>Smart<span class="highlight">Bill</span></h1>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title">Navigation</h3>
+                <nav class="nav-menu">
+                    <a href="/" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                    <a href="/customers" class="nav-item"><i class="ph ph-users"></i> Customers</a>
+                    <a href="/reports" class="nav-item active"><i class="ph ph-chart-bar"></i> Reports</a>
+                </nav>
+            </div>
+
+            <div class="sidebar-section receipts-section">
+                <h3 class="section-title">Recent Receipts <span class="badge"><%= receipts.length %></span></h3>
+                <div class="receipt-list-container">
+                    <% if (receipts.length > 0) { %>
+                        <ul class="receipt-list">
+                            <% receipts.slice().reverse().forEach(receipt => { %>
+                                <li>
+                                    <a href="/receipt/<%= receipt.id %>" class="receipt-card">
+                                        <div class="receipt-icon"><i class="ph ph-file-text"></i></div>
+                                        <div class="receipt-info">
+                                            <span class="receipt-id"><%= receipt.customerName %></span>
+                                            <span class="receipt-date"><%= receipt.date.split(',')[0] %></span>
+                                        </div>
+                                        <span class="receipt-total">₹<%= receipt.total %></span>
+                                    </a>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <div class="empty-receipts">
+                            <i class="ph ph-files"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <header class="topbar">
+                <div class="search-bar">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Search reports...">
+                </div>
+                <div class="user-profile">
+                    <div class="notification-bell">
+                        <i class="ph ph-bell"></i>
+                        <span class="indicator"></span>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Admin" alt="User Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="all-content-container">
+                <div class="page-header">
+                    <h2>Financial Reports</h2>
+                    <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Transaction Summary</span>
+                </div>
+
+                <div class="reports-grid">
+                    <div class="report-card glass-panel">
+                        <div class="report-header">
+                            <i class="ph ph-calendar-blank"></i> Today's Revenue
+                        </div>
+                        <div class="report-value highlight">₹<%= todayTotal %></div>
+                    </div>
+
+                    <div class="report-card glass-panel">
+                        <div class="report-header">
+                            <i class="ph ph-calendar-plus"></i> This Week
+                        </div>
+                        <div class="report-value highlight">₹<%= weekTotal %></div>
+                    </div>
+
+                    <div class="report-card glass-panel">
+                        <div class="report-header">
+                            <i class="ph ph-calendar"></i> This Month
+                        </div>
+                        <div class="report-value highlight">₹<%= monthTotal %></div>
+                    </div>
+
+                    <div class="report-card glass-panel">
+                        <div class="report-header">
+                            <i class="ph ph-calendar-check"></i> This Year
+                        </div>
+                        <div class="report-value highlight">₹<%= yearTotal %></div>
+                    </div>
+                </div>
+
+                <div class="recent-transactions-section glass-panel" style="padding: 1.5rem; flex: 1; border-radius: 12px;">
+                    <h3 style="margin-bottom: 1.5rem; font-weight: 600;">All Transactions</h3>
+                    <% if (receipts.length > 0) { %>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                                        <th style="padding: 1rem;">Receipt ID</th>
+                                        <th style="padding: 1rem;">Date</th>
+                                        <th style="padding: 1rem;">Customer</th>
+                                        <th style="padding: 1rem; text-align: right;">Total Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% receipts.slice().reverse().forEach(receipt => { %>
+                                        <tr style="border-bottom: 1px dashed rgba(255,255,255,0.05); transition: background 0.2s;">
+                                            <td style="padding: 1rem;"><a href="/receipt/<%= receipt.id %>" style="color: var(--primary); text-decoration: underline; font-weight: 500;">#<%= receipt.id %></a></td>
+                                            <td style="padding: 1rem; color: var(--text-secondary);"><%= receipt.date %></td>
+                                            <td style="padding: 1rem;"><%= receipt.customerName %></td>
+                                            <td style="padding: 1rem; text-align: right; font-weight: 600;">₹<%= receipt.total %></td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <p style="color: var(--text-secondary);">No transactions available yet.</p>
+                    <% } %>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>
