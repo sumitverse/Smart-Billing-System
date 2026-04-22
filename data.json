@@ -10,11 +10,17 @@
           "name": "Lenovo LOQ ",
           "price": 109000,
           "quantity": 1
+        },
+        {
+          "id": "1776833894069",
+          "name": "JioFiber ",
+          "price": 1599,
+          "quantity": 1
         }
       ],
-      "subtotal": "109000.00",
-      "tax": "10900.00",
-      "total": "119900.00"
+      "subtotal": "110599.00",
+      "tax": "11059.90",
+      "total": "121658.90"
     },
     {
       "id": 2,
@@ -44,15 +50,15 @@
       "customerName": "Kunal",
       "items": [
         {
-          "id": "1776832078846",
-          "name": "Mouse",
-          "price": 500,
-          "quantity": 12
+          "id": "1776836612316",
+          "name": "Lenovo LOQ",
+          "price": 98000,
+          "quantity": 2
         }
       ],
-      "subtotal": "6000.00",
-      "tax": "600.00",
-      "total": "6600.00"
+      "subtotal": "196000.00",
+      "tax": "19600.00",
+      "total": "215600.00"
     }
   ]
 }

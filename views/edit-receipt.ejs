@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Receipt - Smart Billing</title>
-    <!-- Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="/css/style.css">
     <style>
@@ -40,8 +38,6 @@
 </head>
 <body class="dark-theme">
     <div class="app-layout">
-        
-        <!-- Left Sidebar: App branding & Receipts -->
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
                 <i class="ph-fill ph-receipt highlight-icon"></i>
@@ -70,7 +66,11 @@
                                             <span class="receipt-id"><%= r.customerName %></span>
                                             <span class="receipt-date"><%= r.date.split(',')[0] %></span>
                                         </div>
-                                        <span class="receipt-total">₹<%= r.total %></span>
+                                        <% if (r.status === 'Unpaid') { %>
+                                            <span class="receipt-total" style="color: #ef4444;" title="Unpaid">₹<%= formatCurrency(r.total) %> <i class="ph ph-warning-circle"></i></span>
+                                        <% } else { %>
+                                            <span class="receipt-total">₹<%= formatCurrency(r.total) %></span>
+                                        <% } %>
                                     </a>
                                 </li>
                             <% }) %>
@@ -79,8 +79,6 @@
                 </div>
             </div>
         </aside>
-
-        <!-- Main Content Area -->
         <main class="main-content">
             
             <header class="topbar">
@@ -159,7 +157,6 @@
 
                             <div class="bill-items-container">
                                 <ul id="billList" class="current-bill-list">
-                                    <!-- Items injected here by JS -->
                                 </ul>
                             </div>
 
@@ -188,6 +185,13 @@
                                             <input type="text" id="customerName" required value="<%= receipt.customerName %>">
                                         </div>
                                     </div>
+                                    <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                                        <label for="customerEmail">Email Address</label>
+                                        <div class="input-with-icon">
+                                            <i class="ph ph-envelope"></i>
+                                            <input type="email" id="customerEmail" required value="<%= receipt.customerEmail %>">
+                                        </div>
+                                    </div>
                                     <button type="submit" class="btn btn-success btn-checkout">
                                         <i class="ph ph-floppy-disk"></i> Save Modifications
                                     </button>
@@ -199,19 +203,22 @@
             </div>
         </main>
     </div>
-
-    <!-- Client-side Logic for Editing -->
     <script id="receipt-data" type="application/json">
         <%- JSON.stringify(receipt.items) %>
     </script>
     <script>
-        // Load initial state from server-side template
         let items = JSON.parse(document.getElementById('receipt-data').textContent);
 
         const addItemForm = document.getElementById('addItemForm');
         const saveChangesForm = document.getElementById('saveChangesForm');
         const billList = document.getElementById('billList');
         
+        const formatCurrency = (amount) => {
+            const num = parseFloat(amount);
+            if (isNaN(num)) return amount;
+            return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+        };
+
         function updateUI() {
             billList.innerHTML = '';
             
@@ -232,11 +239,11 @@
                     
                     const itemDetails = document.createElement('div');
                     itemDetails.className = 'item-details';
-                    itemDetails.innerHTML = `<div class="item-name">${item.name}</div><div class="item-meta">₹${parseFloat(item.price).toFixed(2)} x ${item.quantity}</div>`;
+                    itemDetails.innerHTML = `<div class="item-name">${item.name}</div><div class="item-meta">₹${formatCurrency(item.price)} x ${item.quantity}</div>`;
                     
                     const itemTotal = document.createElement('div');
                     itemTotal.className = 'item-total';
-                    itemTotal.innerText = '₹' + (item.price * item.quantity).toFixed(2);
+                    itemTotal.innerText = '₹' + formatCurrency(item.price * item.quantity);
                     
                     const removeBtn = document.createElement('button');
                     removeBtn.className = 'btn-remove';
@@ -261,9 +268,9 @@
             const tax = subtotal * 0.10;
             const total = subtotal + tax;
 
-            document.getElementById('subtotalLabel').innerText = '₹' + subtotal.toFixed(2);
-            document.getElementById('taxLabel').innerText = '₹' + tax.toFixed(2);
-            document.getElementById('totalLabel').innerText = '₹' + total.toFixed(2);
+            document.getElementById('subtotalLabel').innerText = '₹' + formatCurrency(subtotal);
+            document.getElementById('taxLabel').innerText = '₹' + formatCurrency(tax);
+            document.getElementById('totalLabel').innerText = '₹' + formatCurrency(total);
             
             const btn = saveChangesForm.querySelector('button');
             btn.disabled = items.length === 0;
@@ -275,8 +282,6 @@
                 btn.style.cursor = 'pointer';
             }
         }
-
-        // Initialize UI with pre-loaded items
         updateUI();
 
         addItemForm.addEventListener('submit', (e) => {
@@ -300,12 +305,13 @@
         saveChangesForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const customerName = document.getElementById('customerName').value;
+            const customerEmail = document.getElementById('customerEmail').value;
             
             try {
                 const response = await fetch(window.location.pathname, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ customerName, items })
+                    body: JSON.stringify({ customerName, customerEmail, items })
                 });
                 
                 const data = await response.json();

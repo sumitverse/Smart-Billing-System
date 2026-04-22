@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports - Smart Billing</title>
-    <!-- Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="/css/style.css">
     <style>
@@ -74,7 +72,6 @@
 <body class="dark-theme">
     <div class="app-layout">
         
-        <!-- Left Sidebar -->
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
                 <i class="ph-fill ph-receipt highlight-icon"></i>
@@ -103,7 +100,11 @@
                                             <span class="receipt-id"><%= receipt.customerName %></span>
                                             <span class="receipt-date"><%= receipt.date.split(',')[0] %></span>
                                         </div>
-                                        <span class="receipt-total">₹<%= receipt.total %></span>
+                                        <% if (receipt.status === 'Unpaid') { %>
+                                            <span class="receipt-total" style="color: #ef4444;" title="Unpaid">₹<%= formatCurrency(receipt.total) %> <i class="ph ph-warning-circle"></i></span>
+                                        <% } else { %>
+                                            <span class="receipt-total">₹<%= formatCurrency(receipt.total) %></span>
+                                        <% } %>
                                     </a>
                                 </li>
                             <% }) %>
@@ -144,37 +145,42 @@
                 </div>
 
                 <div class="reports-grid">
-                    <div class="report-card glass-panel">
+                    <div class="report-card glass-panel" onclick="filterTransactions('today')" style="cursor: pointer;" title="Show Today's Transactions">
                         <div class="report-header">
                             <i class="ph ph-calendar-blank"></i> Today's Revenue
                         </div>
-                        <div class="report-value highlight">₹<%= todayTotal %></div>
+                        <div class="report-value highlight">₹<%= formatCurrency(todayTotal) %></div>
                     </div>
 
-                    <div class="report-card glass-panel">
-                        <div class="report-header">
-                            <i class="ph ph-calendar-plus"></i> This Week
-                        </div>
-                        <div class="report-value highlight">₹<%= weekTotal %></div>
-                    </div>
 
-                    <div class="report-card glass-panel">
+
+                    <div class="report-card glass-panel" onclick="filterTransactions('month')" style="cursor: pointer;" title="Show This Month's Transactions">
                         <div class="report-header">
                             <i class="ph ph-calendar"></i> This Month
                         </div>
-                        <div class="report-value highlight">₹<%= monthTotal %></div>
+                        <div class="report-value highlight">₹<%= formatCurrency(monthTotal) %></div>
                     </div>
 
-                    <div class="report-card glass-panel">
+                    <div class="report-card glass-panel" onclick="filterTransactions('year')" style="cursor: pointer;" title="Show This Year's Transactions">
                         <div class="report-header">
                             <i class="ph ph-calendar-check"></i> This Year
                         </div>
-                        <div class="report-value highlight">₹<%= yearTotal %></div>
+                        <div class="report-value highlight">₹<%= formatCurrency(yearTotal) %></div>
+                    </div>
+
+                    <div class="report-card glass-panel" onclick="filterTransactions('unpaid')" style="cursor: pointer; border-color: rgba(239, 68, 68, 0.4);" title="Show Unpaid Transactions">
+                        <div class="report-header" style="color: #ef4444;">
+                            <i class="ph ph-warning-circle" style="color: #ef4444; background: rgba(239, 68, 68, 0.15);"></i> Unpaid Amount
+                        </div>
+                        <div class="report-value highlight" style="color: #ef4444;">₹<%= formatCurrency(unpaidTotal) %></div>
                     </div>
                 </div>
 
                 <div class="recent-transactions-section glass-panel" style="padding: 1.5rem; flex: 1; border-radius: 12px;">
-                    <h3 style="margin-bottom: 1.5rem; font-weight: 600;">All Transactions</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 id="tableTitle" style="font-weight: 600; margin: 0;">All Transactions</h3>
+                        <button onclick="filterTransactions('all')" class="btn glass-panel" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 0.25rem 0.75rem; font-size: 0.85rem;">Clear Filter</button>
+                    </div>
                     <% if (receipts.length > 0) { %>
                         <div style="overflow-x: auto;">
                             <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -187,12 +193,22 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <% receipts.slice().reverse().forEach(receipt => { %>
-                                        <tr style="border-bottom: 1px dashed rgba(255,255,255,0.05); transition: background 0.2s;">
+                                    <% receipts.slice().reverse().forEach(receipt => { 
+                                        let parsedDate = new Date(receipt.date);
+                                        let timestamp = isNaN(parsedDate.getTime()) ? 0 : parsedDate.getTime();
+                                        if (isNaN(parsedDate.getTime())) {
+                                            let parts = receipt.date.split(',')[0].split('/');
+                                            if (parts.length === 3) {
+                                                parsedDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                                                timestamp = isNaN(parsedDate.getTime()) ? 0 : parsedDate.getTime();
+                                            }
+                                        }
+                                    %>
+                                        <tr class="transaction-row" data-year="<%= receipt.parsedYear %>" data-month="<%= receipt.parsedMonth %>" data-date="<%= receipt.parsedDate %>" data-timestamp="<%= timestamp %>" data-status="<%= receipt.status || 'Unpaid' %>" style="border-bottom: 1px dashed rgba(255,255,255,0.05); transition: background 0.2s;">
                                             <td style="padding: 1rem;"><a href="/receipt/<%= receipt.id %>" style="color: var(--primary); text-decoration: underline; font-weight: 500;">#<%= receipt.id %></a></td>
                                             <td style="padding: 1rem; color: var(--text-secondary);"><%= receipt.date %></td>
                                             <td style="padding: 1rem;"><%= receipt.customerName %></td>
-                                            <td style="padding: 1rem; text-align: right; font-weight: 600;">₹<%= receipt.total %></td>
+                                            <td style="padding: 1rem; text-align: right; font-weight: 600;">₹<%= formatCurrency(receipt.total) %></td>
                                         </tr>
                                     <% }) %>
                                 </tbody>
@@ -206,5 +222,49 @@
             </div>
         </main>
     </div>
+
+    <script>
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+        const currentDate = new Date().getDate();
+
+        function filterTransactions(filterType) {
+            const rows = document.querySelectorAll('.transaction-row');
+            const title = document.getElementById('tableTitle');
+
+            if (filterType === 'all') title.innerText = 'All Transactions';
+            else if (filterType === 'year') title.innerText = 'This Year\'s Transactions';
+            else if (filterType === 'month') title.innerText = 'This Month\'s Transactions';
+            else if (filterType === 'today') title.innerText = 'Today\'s Transactions';
+            else if (filterType === 'unpaid') title.innerText = 'Unpaid Transactions';
+
+            rows.forEach(row => {
+                const rowYear = parseInt(row.getAttribute('data-year'), 10);
+                const rowMonth = parseInt(row.getAttribute('data-month'), 10);
+                const rowDate = parseInt(row.getAttribute('data-date'), 10);
+                const rowStatus = row.getAttribute('data-status');
+                
+                let show = false;
+                
+                if (filterType === 'all') {
+                    show = true;
+                } else if (filterType === 'year') {
+                    if (rowYear === currentYear) show = true;
+                } else if (filterType === 'month') {
+                    if (rowYear === currentYear && rowMonth === currentMonth) show = true;
+                } else if (filterType === 'today') {
+                    if (rowYear === currentYear && rowMonth === currentMonth && rowDate === currentDate) show = true;
+                } else if (filterType === 'unpaid') {
+                    if (rowStatus === 'Unpaid') show = true;
+                }
+                
+                if (show) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

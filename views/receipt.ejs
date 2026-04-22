@@ -12,9 +12,19 @@
     <div class="receipt-wrapper">
         <div class="receipt-standalone-card glass-panel">
             <header class="receipt-standalone-header">
-                <i class="ph-fill ph-check-circle highlight" style="font-size: 3rem; margin-bottom: 1rem; color: var(--success);"></i>
-                <h2>Payment Successful</h2>
+                <% if (receipt.status === 'Paid') { %>
+                    <i class="ph-fill ph-check-circle highlight" style="font-size: 3rem; margin-bottom: 1rem; color: var(--success);"></i>
+                    <h2>Payment Successful</h2>
+                    <p class="status-badge" style="color: var(--success); font-weight: bold;">PAID</p>
+                <% } else { %>
+                    <i class="ph-fill ph-receipt highlight" style="font-size: 3rem; margin-bottom: 1rem; color: var(--warning);"></i>
+                    <h2>Invoice Generated</h2>
+                    <p class="status-badge" style="color: var(--warning); font-weight: bold;">UNPAID</p>
+                <% } %>
                 <p><%= receipt.date %></p>
+                <% if (receipt.customerEmail) { %>
+                    <p><i class="ph ph-envelope"></i> <%= receipt.customerEmail %></p>
+                <% } %>
             </header>
 
             <table class="receipt-standalone-table">
@@ -31,8 +41,8 @@
                         <tr>
                             <td><%= item.name %></td>
                             <td><%= item.quantity %></td>
-                            <td>₹<%= item.price.toFixed(2) %></td>
-                            <td class="text-right">₹<%= (item.price * item.quantity).toFixed(2) %></td>
+                            <td>₹<%= formatCurrency(item.price) %></td>
+                            <td class="text-right">₹<%= formatCurrency(item.price * item.quantity) %></td>
                         </tr>
                     <% }) %>
                 </tbody>
@@ -41,16 +51,16 @@
             <div class="receipt-standalone-summary">
                 <div class="summary-line">
                     <span>Subtotal</span>
-                    <span>₹<%= receipt.subtotal %></span>
+                    <span>₹<%= formatCurrency(receipt.subtotal) %></span>
                 </div>
                 <div class="summary-line text-muted">
                     <span>Tax (10%)</span>
-                    <span>₹<%= receipt.tax %></span>
+                    <span>₹<%= formatCurrency(receipt.tax) %></span>
                 </div>
                 <div class="divider"></div>
                 <div class="summary-line total-line">
-                    <span>Total Paid</span>
-                    <span class="highlight">₹<%= receipt.total %></span>
+                    <span>Total Amount</span>
+                    <span class="highlight">₹<%= formatCurrency(receipt.total) %></span>
                 </div>
             </div>
 
@@ -58,8 +68,13 @@
                 <a href="/" class="btn glass-panel" style="background: rgba(255,255,255,0.05); color: white;">
                     <i class="ph ph-arrow-left"></i> Dashboard
                 </a>
+                <% if (receipt.status !== 'Paid') { %>
+                <button onclick="markAsPaid('<%= receipt.id %>')" class="btn btn-success" style="background: var(--success); color: white; border: none;">
+                    <i class="ph ph-currency-inr"></i> Mark as Paid
+                </button>
+                <% } %>
                 <a href="/receipt/<%= receipt.id %>/edit" class="btn" style="background: rgba(99, 102, 241, 0.15); color: var(--primary); border: 1px solid var(--primary); transition: all 0.3s ease;">
-                    <i class="ph ph-pencil-simple"></i> Edit Receipt
+                    <i class="ph ph-pencil-simple"></i> Edit
                 </a>
                 <button onclick="window.print()" class="btn btn-primary btn-glow">
                     <i class="ph ph-printer"></i> Print
@@ -67,5 +82,24 @@
             </div>
         </div>
     </div>
+    <script>
+        async function markAsPaid(receiptId) {
+            if (confirm('Are you sure you want to mark this invoice as paid? An email will be sent to the customer.')) {
+                try {
+                    const response = await fetch('/receipt/' + receiptId + '/pay', {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                } catch (err) {
+                    alert('Network error while marking as paid.');
+                }
+            }
+        }
+    </script>
 </body>
 </html>

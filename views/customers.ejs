@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customers - Smart Billing</title>
-    <!-- Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Icons (Phosphor Icons for a clean look) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="/css/style.css">
     <style>
@@ -122,8 +120,7 @@
 </head>
 <body class="dark-theme">
     <div class="app-layout">
-        
-        <!-- Left Sidebar: App branding & Receipts -->
+
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
                 <i class="ph-fill ph-receipt highlight-icon"></i>
@@ -152,7 +149,11 @@
                                             <span class="receipt-id"><%= receipt.customerName %></span>
                                             <span class="receipt-date"><%= receipt.date.split(',')[0] %></span>
                                         </div>
-                                        <span class="receipt-total">₹<%= receipt.total %></span>
+                                        <% if (receipt.status === 'Unpaid') { %>
+                                            <span class="receipt-total" style="color: #ef4444;" title="Unpaid">₹<%= formatCurrency(receipt.total) %> <i class="ph ph-warning-circle"></i></span>
+                                        <% } else { %>
+                                            <span class="receipt-total">₹<%= formatCurrency(receipt.total) %></span>
+                                        <% } %>
                                     </a>
                                 </li>
                             <% }) %>
@@ -167,7 +168,6 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="main-content">
             
             <header class="topbar">
@@ -196,17 +196,22 @@
                     <div class="customers-grid">
                         <% customers.forEach(customer => { %>
                             <div class="customer-card glass-panel">
-                                <div class="customer-header">
-                                    <div class="customer-avatar">
-                                        <i class="ph ph-user"></i>
+                                <div class="customer-header" style="justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div class="customer-avatar">
+                                            <i class="ph ph-user"></i>
+                                        </div>
+                                        <div class="customer-name"><%= customer.name %></div>
                                     </div>
-                                    <div class="customer-name"><%= customer.name %></div>
+                                    <button class="btn-icon" style="background: none; border: none; cursor: pointer; padding: 0.5rem; color: #ef4444;" onclick="deleteCustomer('<%= customer.name %>')" title="Delete Customer">
+                                        <i class="ph ph-trash" style="font-size: 1.25rem;"></i>
+                                    </button>
                                 </div>
                                 
                                 <div class="customer-stats">
                                     <div class="stat-item">
                                         <span class="stat-label">Total Spent</span>
-                                        <span class="stat-value highlight">₹<%= customer.totalSpent.toFixed(2) %></span>
+                                        <span class="stat-value highlight">₹<%= formatCurrency(customer.totalSpent) %></span>
                                     </div>
                                     <div class="stat-item" style="text-align: right;">
                                         <span class="stat-label">Orders</span>
@@ -220,7 +225,7 @@
                                         <% customer.receipts.slice().reverse().slice(0, 3).forEach(r => { %>
                                             <li class="history-item">
                                                 <span><a href="/receipt/<%= r.id %>" style="text-decoration: underline;">Receipt</a> - <%= r.date.split(',')[0] %></span>
-                                                <span style="font-weight: 500;">₹<%= r.total %></span>
+                                                <span style="font-weight: 500;">₹<%= formatCurrency(r.total) %></span>
                                             </li>
                                         <% }) %>
                                     </ul>
@@ -245,5 +250,25 @@
             </div>
         </main>
     </div>
+
+    <script>
+        async function deleteCustomer(name) {
+            if (confirm(`Are you sure you want to delete the customer "${name}" and all their receipts? This action cannot be undone.`)) {
+                try {
+                    const response = await fetch('/customer/' + encodeURIComponent(name) + '/delete', {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error deleting customer: ' + data.error);
+                    }
+                } catch (err) {
+                    alert('Network error while deleting customer.');
+                }
+            }
+        }
+    </script>
 </body>
 </html>

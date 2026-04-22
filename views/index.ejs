@@ -4,16 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Billing System</title>
-    <!-- Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Icons (Phosphor Icons for a clean look) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="dark-theme">
     <div class="app-layout">
-        
-        <!-- Left Sidebar: App branding & Receipts -->
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
                 <i class="ph-fill ph-receipt highlight-icon"></i>
@@ -42,7 +38,11 @@
                                             <span class="receipt-id"><%= receipt.customerName %></span>
                                             <span class="receipt-date"><%= receipt.date.split(',')[0] %></span>
                                         </div>
-                                        <span class="receipt-total">₹<%= receipt.total %></span>
+                                        <% if (receipt.status === 'Unpaid') { %>
+                                            <span class="receipt-total" style="color: #ef4444;" title="Unpaid">₹<%= formatCurrency(receipt.total) %> <i class="ph ph-warning-circle"></i></span>
+                                        <% } else { %>
+                                            <span class="receipt-total">₹<%= formatCurrency(receipt.total) %></span>
+                                        <% } %>
                                     </a>
                                 </li>
                             <% }) %>
@@ -57,7 +57,6 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="main-content">
             
             <header class="topbar">
@@ -78,7 +77,6 @@
 
             <div class="dashboard-grid">
                 
-                <!-- Left Column: Add Item & Quick Stats -->
                 <div class="content-left">
                     <section class="add-section glass-panel">
                         <div class="section-header">
@@ -117,7 +115,6 @@
                     </section>
                 </div>
 
-                <!-- Right Column: Current Bill List & Checkout -->
                 <div class="content-right">
                     <section class="billing-section glass-panel">
                         <div class="section-header">
@@ -131,9 +128,9 @@
                                         <li class="bill-item">
                                             <div class="item-details">
                                                 <div class="item-name"><%= item.name %></div>
-                                                <div class="item-meta">₹<%= item.price.toFixed(2) %> x <%= item.quantity %></div>
+                                                <div class="item-meta">₹<%= formatCurrency(item.price) %> x <%= item.quantity %></div>
                                             </div>
-                                            <div class="item-total">₹<%= (item.price * item.quantity).toFixed(2) %></div>
+                                            <div class="item-total">₹<%= formatCurrency(item.price * item.quantity) %></div>
                                             <form action="/remove-item/<%= item.id %>" method="POST" class="remove-form">
                                                 <button type="submit" class="btn-remove" title="Remove Item">
                                                     <i class="ph ph-trash"></i>
@@ -157,16 +154,16 @@
                             <div class="summary-details">
                                 <div class="summary-line">
                                     <span>Subtotal</span>
-                                    <span>₹<%= subtotal || '0.00' %></span>
+                                    <span>₹<%= formatCurrency(subtotal || 0) %></span>
                                 </div>
                                 <div class="summary-line text-muted">
                                     <span>Tax (10%)</span>
-                                    <span>₹<%= tax || '0.00' %></span>
+                                    <span>₹<%= formatCurrency(tax || 0) %></span>
                                 </div>
                                 <div class="divider"></div>
                                 <div class="summary-line total-line">
                                     <span>Total</span>
-                                    <span class="total-amount highlight">₹<%= total || '0.00' %></span>
+                                    <span class="total-amount highlight">₹<%= formatCurrency(total || 0) %></span>
                                 </div>
                             </div>
                             
@@ -176,6 +173,13 @@
                                     <div class="input-with-icon">
                                         <i class="ph ph-user"></i>
                                         <input type="text" id="customerName" name="customerName" required placeholder="Name" autocomplete="off" <%= items.length === 0 ? 'disabled' : '' %>>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                                    <label for="customerEmail">Email Address</label>
+                                    <div class="input-with-icon">
+                                        <i class="ph ph-envelope"></i>
+                                        <input type="email" id="customerEmail" name="customerEmail" required placeholder="e.g. name@example.com" autocomplete="off" <%= items.length === 0 ? 'disabled' : '' %>>
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-success btn-checkout" <%= items.length === 0 ? 'disabled' : '' %>>
